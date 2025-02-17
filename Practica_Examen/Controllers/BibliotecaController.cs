@@ -22,10 +22,10 @@ namespace Practica_Examen.Controllers
 
         public IActionResult Get()
         {
-            var listadoAutor = (from a in _bibliotecaContext.Autor 
-                                 select a).ToList();
+            var listadoAutor = (from a in _bibliotecaContext.Autor
+                                select a).ToList();
 
-            if(listadoAutor.Count() == 0)
+            if (listadoAutor.Count() == 0)
             {
                 return NotFound();
             }
@@ -37,17 +37,17 @@ namespace Practica_Examen.Controllers
         public IActionResult Get(int id)
         {
             var AutorById = (from a in _bibliotecaContext.Autor
-                                join l in _bibliotecaContext.Libro
-                                on a.Id equals l.AutorId
-                            where a.Id == id
-                            select new
-                            {
-                                a.Id,
-                                a.Nombre,
-                                a.Nacionalidad,
-                                l.Titulo
+                             join l in _bibliotecaContext.Libro
+                             on a.Id equals l.AutorId
+                             where a.Id == id
+                             select new
+                             {
+                                 a.Id,
+                                 a.Nombre,
+                                 a.Nacionalidad,
+                                 l.Titulo
 
-                            }).ToList();
+                             }).ToList();
 
             if (AutorById.Count() == 0)
             {
@@ -71,17 +71,17 @@ namespace Practica_Examen.Controllers
 
                 return BadRequest(ex.Message);
             }
-        } 
-        
+        }
+
         [HttpPut]
         [Route("UpdateAutor")]
         public IActionResult ActualizarAutor(int id, [FromBody] Autor autorModificar)
         {
             Autor? autorActualizado = (from a in _bibliotecaContext.Autor
-                            where a.Id == id
-                            select a).FirstOrDefault();
+                                       where a.Id == id
+                                       select a).FirstOrDefault();
 
-            if(autorActualizado == null)
+            if (autorActualizado == null)
             { return NotFound(); }
 
             autorActualizado.Nombre = autorModificar.Nombre;
@@ -96,11 +96,11 @@ namespace Practica_Examen.Controllers
         [Route("DeleteAutor")]
         public IActionResult EliminarLibro(int id)
         {
-           Autor? autor = (from a in _bibliotecaContext.Autor
-                           where a.Id == id
-                           select a).FirstOrDefault();
+            Autor? autor = (from a in _bibliotecaContext.Autor
+                            where a.Id == id
+                            select a).FirstOrDefault();
 
-            if(autor == null)
+            if (autor == null)
                 return NotFound();
 
             _bibliotecaContext.Autor.Attach(autor);
@@ -133,7 +133,7 @@ namespace Practica_Examen.Controllers
             var AutorById = (from l in _bibliotecaContext.Libro
                              join a in _bibliotecaContext.Autor
                              on l.AutorId equals a.Id
-                             where l.Id == id 
+                             where l.Id == id
                              select new
                              {
                                  l.Id,
@@ -175,8 +175,8 @@ namespace Practica_Examen.Controllers
         public IActionResult ActualizarLibro(int id, [FromBody] Libro modificarLibro)
         {
             Libro? LibroCambio = (from l in _bibliotecaContext.Libro
-                                       where l.Id == id
-                                       select l).FirstOrDefault();
+                                  where l.Id == id
+                                  select l).FirstOrDefault();
 
             if (LibroCambio == null)
             { return NotFound(); }
@@ -276,14 +276,40 @@ namespace Practica_Examen.Controllers
 
         /// Segundas consultas LINQ
         /// 
+
+        [HttpGet]
+        [Route("MasLibros")]
+        public IActionResult AutoresConMasLibros()
+        {
+            var listadoslibros = (from l in _bibliotecaContext.Libro
+                                       join a in _bibliotecaContext.Autor
+                                       on l.AutorId equals a.Id
+                                       group l by new { a.Id, a.Nombre } into g
+                                       orderby g.Count() descending
+                                       select new
+                                       {
+                                           AutorId = g.Key.Id,
+                                           Nombre = g.Key.Nombre,
+                                           CantidadLibros = g.Count()
+                                       }).Take(5).ToList();
+
+            if (listadoslibros.Count() == 0)
+            {
+                return NotFound();
+            }
+
+            return Ok(listadoslibros);
+        }
+
+
         [HttpGet]
         [Route("Recientes")]
         public IActionResult LibrosMasRecientes()
         {
             var librosMasRecientes = (from l in _bibliotecaContext.Libro
-                                      orderby l.AñoPublicacion descending  
+                                      orderby l.AñoPublicacion descending
                                       select l)
-                                      .ToList(); 
+                                      .ToList();
 
             return Ok(librosMasRecientes);
         }
@@ -293,12 +319,12 @@ namespace Practica_Examen.Controllers
         public IActionResult CantidadLibrosPorAño()
         {
             var cantidadLibrosPorAño = (from l in _bibliotecaContext.Libro
-                                        group l by l.AñoPublicacion into g  
+                                        group l by l.AñoPublicacion into g
                                         select new
                                         {
-                                            Año = g.Key,  
-                                            CantidadLibros = g.Count()  
-                                        }).ToList();  
+                                            Año = g.Key,
+                                            CantidadLibros = g.Count()
+                                        }).ToList();
 
             return Ok(cantidadLibrosPorAño);
         }
@@ -322,24 +348,24 @@ namespace Practica_Examen.Controllers
             return Ok(autorConLibros);
         }
 
-    }
 
-    [HttpGet]
+
+        [HttpGet]
         [Route("PrimerLibroByAutor/{id}")]
         public IActionResult PrimerLibro(int id)
         {
             var listaLibro = (from l in _bibliotecaContext.Libro
-                               where l.AutorId == id
-                               orderby l.AñoPublicacion ascending
-                               select new
-                               {
-                                   l.Id,
-                                   l.Titulo,
-                                   l.AñoPublicacion,
-                                   l.AutorId,
-                                   l.CategoriaId,
-                                   l.Resumen
-                               }).FirstOrDefault();
+                              where l.AutorId == id
+                              orderby l.AñoPublicacion ascending
+                              select new
+                              {
+                                  l.Id,
+                                  l.Titulo,
+                                  l.AñoPublicacion,
+                                  l.AutorId,
+                                  l.CategoriaId,
+                                  l.Resumen
+                              }).FirstOrDefault();
 
             if (listaLibro == null)
             {
@@ -348,5 +374,6 @@ namespace Practica_Examen.Controllers
 
             return Ok(listaLibro);
         }
+    }
 
 }
